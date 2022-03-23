@@ -1,6 +1,5 @@
 # 通过golang的ebiten引擎做的类传奇小demo  power by ebiten引擎
 
-ebiten地址 https://ebiten-zh.vercel.app/examples/
 ！转载请注明来源
 
 ```
