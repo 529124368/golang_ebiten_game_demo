@@ -33,6 +33,8 @@ type Player struct {
 	y         float64
 	state     int
 	direction int
+	MouseX    int
+	MouseY    int
 }
 
 var counts int = 0
@@ -48,10 +50,12 @@ func NewGame() *Game {
 	gameStart := &Game{
 		count: 0,
 		player: &Player{
-			x:         0,
-			y:         0,
+			x:         float64(screenWidth/2 + offsetX),
+			y:         float64(screenHeight/2 + offsetY),
 			state:     IDLE,
 			direction: 0,
+			MouseX:    0,
+			MouseY:    0,
 		},
 	}
 	return gameStart
@@ -109,6 +113,7 @@ func init() {
 	//image option
 	op = &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(screenWidth/2+offsetX), float64(screenHeight/2+offsetY))
+	fmt.Println(float64(screenWidth/2+offsetX), float64(screenHeight/2+offsetY))
 	op.GeoM.Scale(0.4, 0.4)
 	op.Filter = ebiten.FilterLinear
 	//copy
@@ -122,28 +127,37 @@ func MapCopy(a, b map[int]*ebiten.Image) {
 func (g *Game) Update() error {
 	g.count++
 	g.player.state = IDLE
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		g.player.MouseX = x
+		g.player.MouseY = y
+	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		g.player.state = RUN
 		g.player.direction = 3
-		opBg.GeoM.Translate(g.player.x+1, 0)
+		opBg.GeoM.Translate(1, 0)
+		g.player.x -= 1
 		MapCopy(imgs_run3, imgNow)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		g.player.state = RUN
 		g.player.direction = 1
-		opBg.GeoM.Translate(g.player.x-1, 0)
+		opBg.GeoM.Translate(-1, 0)
+		g.player.x += 1
 		MapCopy(imgs_run1, imgNow)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		g.player.state = RUN
 		g.player.direction = 2
-		opBg.GeoM.Translate(0, g.player.y-1)
+		opBg.GeoM.Translate(0, -1)
+		g.player.y += 1
 		MapCopy(imgs_run2, imgNow)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		g.player.state = RUN
 		g.player.direction = 0
-		opBg.GeoM.Translate(0, g.player.y+1)
+		opBg.GeoM.Translate(0, 1)
+		g.player.y -= 1
 		MapCopy(imgs_run0, imgNow)
 	}
 	if g.player.state == IDLE {
@@ -177,6 +191,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(bgImage, opBg)
 	//draw images
 	screen.DrawImage(imgNow[counts], op)
+	//draw info
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS:%d\nplayer positon %d,%d\nmouse position %d,%d", int64(ebiten.CurrentFPS()), int64(g.player.x), int64(g.player.y), g.player.MouseX, g.player.MouseY))
 	if g.count > frameNums {
 		counts++
 		g.count = 0
