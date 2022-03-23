@@ -11,5 +11,9 @@
   目前demo 只支持 上 下 左 右 按键移动。
 ## 运行效果如下
 
-![1](https://user-images.githubusercontent.com/22612129/159606941-a7c8887c-c48d-4bd9-a617-1d185832efd6.png)
 ![2](https://user-images.githubusercontent.com/22612129/159607360-9454fd68-c4cb-47cb-9fa8-49c25efbe599.png)
+
+## 左上角信息提示 更新！！
+
+![3](https://user-images.githubusercontent.com/22612129/159660101-be0adfeb-4a2a-4928-87b1-487c22c9c33c.png)
+
