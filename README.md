@@ -1,0 +1,2 @@
+# golang_ebiten_game_demo
+通过golang的ebiten引擎做的类传奇小demo
