@@ -12,13 +12,14 @@ import (
 )
 
 const (
-	IDLE         int = 0
-	RUN          int = 1
-	ATTACK       int = 2
-	screenWidth  int = 320
-	screenHeight int = 240
-	offsetX      int = 150
-	offsetY      int = 80
+	IDLE         int    = 0
+	RUN          int    = 1
+	ATTACK       int    = 2
+	screenWidth  int    = 320
+	screenHeight int    = 240
+	offsetX      int    = 150
+	offsetY      int    = 80
+	PATH         string = "resource/playerAnm"
 )
 
 //Game
@@ -41,11 +42,12 @@ var counts, dir int = 0, 0
 var frameNums int = 4
 var imgs_idel0, imgs_idel0_5, imgs_idel1, imgs_idel1_5, imgs_idel2, imgs_idel2_5, imgs_idel3, imgs_idel3_5 map[int]*ebiten.Image
 var imgs_run0, imgs_run0_5, imgs_run1, imgs_run1_5, imgs_run2, imgs_run2_5, imgs_run3, imgs_run3_5, imgNow map[int]*ebiten.Image
-var op, opBg *ebiten.DrawImageOptions
+var imgs_atc0, imgs_atc0_5, imgs_atc1, imgs_atc1_5, imgs_atc2, imgs_atc2_5, imgs_atc3, imgs_atc3_5 map[int]*ebiten.Image
+var op, opBg, opUI *ebiten.DrawImageOptions
 var flg bool = false
 
-//BG
-var bgImage *ebiten.Image
+//BG UI
+var bgImage, UI *ebiten.Image
 
 //factory
 func NewGame() *Game {
@@ -84,15 +86,29 @@ func init() {
 	imgs_run2_5 = make(map[int]*ebiten.Image)
 	imgs_run3 = make(map[int]*ebiten.Image)
 	imgs_run3_5 = make(map[int]*ebiten.Image)
+	//attack
+	imgs_atc0 = make(map[int]*ebiten.Image)
+	imgs_atc0_5 = make(map[int]*ebiten.Image)
+	imgs_atc1 = make(map[int]*ebiten.Image)
+	imgs_atc1_5 = make(map[int]*ebiten.Image)
+	imgs_atc2 = make(map[int]*ebiten.Image)
+	imgs_atc2_5 = make(map[int]*ebiten.Image)
+	imgs_atc3 = make(map[int]*ebiten.Image)
+	imgs_atc3_5 = make(map[int]*ebiten.Image)
+
+	//UI load
+	mgUI, _, err := ebitenutil.NewImageFromFile("resource/UI/attack.png")
+	UI = mgUI
+	//load
 	for i := 0; i < 4; i++ {
-		mg0, _, err := ebitenutil.NewImageFromFile("resource/idle0/" + strconv.Itoa(i) + ".png")
-		mg0_5, _, err := ebitenutil.NewImageFromFile("resource/idle0.5/" + strconv.Itoa(i) + ".png")
-		mg1, _, err := ebitenutil.NewImageFromFile("resource/idle1/" + strconv.Itoa(i) + ".png")
-		mg1_5, _, err := ebitenutil.NewImageFromFile("resource/idle1.5/" + strconv.Itoa(i) + ".png")
-		mg2, _, err := ebitenutil.NewImageFromFile("resource/idle2/" + strconv.Itoa(i) + ".png")
-		mg2_5, _, err := ebitenutil.NewImageFromFile("resource/idle2.5/" + strconv.Itoa(i) + ".png")
-		mg3, _, err := ebitenutil.NewImageFromFile("resource/idle3/" + strconv.Itoa(i) + ".png")
-		mg3_5, _, err := ebitenutil.NewImageFromFile("resource/idle3.5/" + strconv.Itoa(i) + ".png")
+		mg0, _, err := ebitenutil.NewImageFromFile(PATH + "/idle0/" + strconv.Itoa(i) + ".png")
+		mg0_5, _, err := ebitenutil.NewImageFromFile(PATH + "/idle0.5/" + strconv.Itoa(i) + ".png")
+		mg1, _, err := ebitenutil.NewImageFromFile(PATH + "/idle1/" + strconv.Itoa(i) + ".png")
+		mg1_5, _, err := ebitenutil.NewImageFromFile(PATH + "/idle1.5/" + strconv.Itoa(i) + ".png")
+		mg2, _, err := ebitenutil.NewImageFromFile(PATH + "/idle2/" + strconv.Itoa(i) + ".png")
+		mg2_5, _, err := ebitenutil.NewImageFromFile(PATH + "/idle2.5/" + strconv.Itoa(i) + ".png")
+		mg3, _, err := ebitenutil.NewImageFromFile(PATH + "/idle3/" + strconv.Itoa(i) + ".png")
+		mg3_5, _, err := ebitenutil.NewImageFromFile(PATH + "/idle3.5/" + strconv.Itoa(i) + ".png")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -106,14 +122,22 @@ func init() {
 		imgs_idel3_5[i] = mg3_5
 	}
 	for i := 0; i < 6; i++ {
-		img0, _, err := ebitenutil.NewImageFromFile("resource/run0/" + strconv.Itoa(i) + ".png")
-		img0_5, _, err := ebitenutil.NewImageFromFile("resource/run0.5/" + strconv.Itoa(i) + ".png")
-		img1, _, err := ebitenutil.NewImageFromFile("resource/run1/" + strconv.Itoa(i) + ".png")
-		img1_5, _, err := ebitenutil.NewImageFromFile("resource/run1.5/" + strconv.Itoa(i) + ".png")
-		img2, _, err := ebitenutil.NewImageFromFile("resource/run2/" + strconv.Itoa(i) + ".png")
-		img2_5, _, err := ebitenutil.NewImageFromFile("resource/run2.5/" + strconv.Itoa(i) + ".png")
-		img3, _, err := ebitenutil.NewImageFromFile("resource/run3/" + strconv.Itoa(i) + ".png")
-		img3_5, _, err := ebitenutil.NewImageFromFile("resource/run3.5/" + strconv.Itoa(i) + ".png")
+		img0, _, err := ebitenutil.NewImageFromFile(PATH + "/run0/" + strconv.Itoa(i) + ".png")
+		img0_5, _, err := ebitenutil.NewImageFromFile(PATH + "/run0.5/" + strconv.Itoa(i) + ".png")
+		img1, _, err := ebitenutil.NewImageFromFile(PATH + "/run1/" + strconv.Itoa(i) + ".png")
+		img1_5, _, err := ebitenutil.NewImageFromFile(PATH + "/run1.5/" + strconv.Itoa(i) + ".png")
+		img2, _, err := ebitenutil.NewImageFromFile(PATH + "/run2/" + strconv.Itoa(i) + ".png")
+		img2_5, _, err := ebitenutil.NewImageFromFile(PATH + "/run2.5/" + strconv.Itoa(i) + ".png")
+		img3, _, err := ebitenutil.NewImageFromFile(PATH + "/run3/" + strconv.Itoa(i) + ".png")
+		img3_5, _, err := ebitenutil.NewImageFromFile(PATH + "/run3.5/" + strconv.Itoa(i) + ".png")
+		imgs0, _, err := ebitenutil.NewImageFromFile(PATH + "/attack0/" + strconv.Itoa(i) + ".png")
+		imgs0_5, _, err := ebitenutil.NewImageFromFile(PATH + "/attack0.5/" + strconv.Itoa(i) + ".png")
+		imgs1, _, err := ebitenutil.NewImageFromFile(PATH + "/attack1/" + strconv.Itoa(i) + ".png")
+		imgs1_5, _, err := ebitenutil.NewImageFromFile(PATH + "/attack1.5/" + strconv.Itoa(i) + ".png")
+		imgs2, _, err := ebitenutil.NewImageFromFile(PATH + "/attack2/" + strconv.Itoa(i) + ".png")
+		imgs2_5, _, err := ebitenutil.NewImageFromFile(PATH + "/attack2.5/" + strconv.Itoa(i) + ".png")
+		imgs3, _, err := ebitenutil.NewImageFromFile(PATH + "/attack3/" + strconv.Itoa(i) + ".png")
+		imgs3_5, _, err := ebitenutil.NewImageFromFile(PATH + "/attack3.5/" + strconv.Itoa(i) + ".png")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -125,6 +149,15 @@ func init() {
 		imgs_run2_5[i] = img2_5
 		imgs_run3[i] = img3
 		imgs_run3_5[i] = img3_5
+		//
+		imgs_atc0[i] = imgs0
+		imgs_atc0_5[i] = imgs0_5
+		imgs_atc1[i] = imgs1
+		imgs_atc1_5[i] = imgs1_5
+		imgs_atc2[i] = imgs2
+		imgs_atc2_5[i] = imgs2_5
+		imgs_atc3[i] = imgs3
+		imgs_atc3_5[i] = imgs3_5
 	}
 	//BG
 	img, _, err := ebitenutil.NewImageFromFile("resource/bg/bg1.png")
@@ -139,9 +172,14 @@ func init() {
 	//image option
 	op = &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(screenWidth/2+offsetX), float64(screenHeight/2+offsetY))
-	fmt.Println(float64(screenWidth/2+offsetX), float64(screenHeight/2+offsetY))
 	op.GeoM.Scale(0.4, 0.4)
 	op.Filter = ebiten.FilterLinear
+	//UI
+	opUI = &ebiten.DrawImageOptions{}
+	opUI.Filter = ebiten.FilterLinear
+	opUI.GeoM.Translate(500, 350)
+	opUI.GeoM.Scale(0.5, 0.5)
+
 	//copy
 	MapCopy(imgs_run0, imgNow)
 }
@@ -153,13 +191,42 @@ func MapCopy(a, b map[int]*ebiten.Image) {
 }
 func (g *Game) Update() error {
 	g.count++
-	g.player.state = IDLE
+	if g.player.state != ATTACK {
+		g.player.state = IDLE
+	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
 		x, y := ebiten.CursorPosition()
 		g.player.MouseX = x
 		g.player.MouseY = y
 		flg = true
+	}
+	//attack if
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		if x > 250 && x < 270 && y > 176 && y < 195 {
+			g.player.state = ATTACK
+			flg = false
+			switch g.player.direction {
+			case 0:
+				MapCopy(imgs_atc0, imgNow)
+			case 1:
+				MapCopy(imgs_atc0_5, imgNow)
+			case 2:
+				MapCopy(imgs_atc1, imgNow)
+			case 3:
+				MapCopy(imgs_atc1_5, imgNow)
+			case 4:
+				MapCopy(imgs_atc2, imgNow)
+			case 5:
+				MapCopy(imgs_atc2_5, imgNow)
+			case 6:
+				MapCopy(imgs_atc3, imgNow)
+			case 7:
+				MapCopy(imgs_atc3_5, imgNow)
+			}
+
+		}
 	}
 	dir = tools.CaluteDir(160, 120, int64(g.player.MouseX), int64(g.player.MouseY))
 	//keyboard controll
@@ -265,11 +332,13 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("#################", r)
+			fmt.Println("error:", r)
 		}
 	}()
 	//draw bg
 	screen.DrawImage(bgImage, opBg)
+	//draw UI
+	screen.DrawImage(UI, opUI)
 	//draw images
 	screen.DrawImage(imgNow[counts], op)
 	//draw info
@@ -290,7 +359,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func main() {
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
-	//ebiten.SetFullscreen(true)
 	ebiten.SetWindowTitle("golang game test")
 	if err := ebiten.RunGame(NewGame()); err != nil {
 		log.Fatal(err)
