@@ -51,12 +51,12 @@ var (
 	flg       bool = false
 	imgNow    map[int]*ebiten.Image
 )
-var imgs_idel0, imgs_idel0_5, imgs_idel1, imgs_idel1_5, imgs_idel2, imgs_idel2_5, imgs_idel3, imgs_idel3_5 map[int]*ebiten.Image
-var imgs_run0, imgs_run0_5, imgs_run1, imgs_run1_5, imgs_run2, imgs_run2_5, imgs_run3, imgs_run3_5 map[int]*ebiten.Image
-var imgs_atc0, imgs_atc0_5, imgs_atc1, imgs_atc1_5, imgs_atc2, imgs_atc2_5, imgs_atc3, imgs_atc3_5 map[int]*ebiten.Image
 var op, opBg, opUI *ebiten.DrawImageOptions
 
-//BG UI
+var asset map[string]map[int]map[int]*ebiten.Image
+var sub_asset_1_idle, sub_asset_1_attack, sub_asset_1_run map[int]map[int]*ebiten.Image
+var sub_asset_2_idle, sub_asset_2_attack, sub_asset_2_run map[int]*ebiten.Image
+
 var bgImage, UI *ebiten.Image
 
 //go:embed resource
@@ -81,117 +81,47 @@ func NewGame() *Game {
 func init() {
 	//get images
 	imgNow = make(map[int]*ebiten.Image)
-	//idle
-	imgs_idel0 = make(map[int]*ebiten.Image)
-	imgs_idel0_5 = make(map[int]*ebiten.Image)
-	imgs_idel1 = make(map[int]*ebiten.Image)
-	imgs_idel1_5 = make(map[int]*ebiten.Image)
-	imgs_idel2 = make(map[int]*ebiten.Image)
-	imgs_idel2_5 = make(map[int]*ebiten.Image)
-	imgs_idel3 = make(map[int]*ebiten.Image)
-	imgs_idel3_5 = make(map[int]*ebiten.Image)
-	//run
-	imgs_run0 = make(map[int]*ebiten.Image)
-	imgs_run0_5 = make(map[int]*ebiten.Image)
-	imgs_run1 = make(map[int]*ebiten.Image)
-	imgs_run1_5 = make(map[int]*ebiten.Image)
-	imgs_run2 = make(map[int]*ebiten.Image)
-	imgs_run2_5 = make(map[int]*ebiten.Image)
-	imgs_run3 = make(map[int]*ebiten.Image)
-	imgs_run3_5 = make(map[int]*ebiten.Image)
-	//attack
-	imgs_atc0 = make(map[int]*ebiten.Image)
-	imgs_atc0_5 = make(map[int]*ebiten.Image)
-	imgs_atc1 = make(map[int]*ebiten.Image)
-	imgs_atc1_5 = make(map[int]*ebiten.Image)
-	imgs_atc2 = make(map[int]*ebiten.Image)
-	imgs_atc2_5 = make(map[int]*ebiten.Image)
-	imgs_atc3 = make(map[int]*ebiten.Image)
-	imgs_atc3_5 = make(map[int]*ebiten.Image)
+
+	//todo
+	asset = make(map[string]map[int]map[int]*ebiten.Image)
+	sub_asset_1_idle = make(map[int]map[int]*ebiten.Image)
+	sub_asset_1_run = make(map[int]map[int]*ebiten.Image)
+	sub_asset_1_attack = make(map[int]map[int]*ebiten.Image)
 
 	//UI load
 	s, _ := images.ReadFile("resource/UI/attack.png")
 	mgUI := tools.GetEbitenImage(s)
 	UI = mgUI
-	//load images
-	for i := 0; i < 4; i++ {
-		s, _ := images.ReadFile(PATH + "/idle0/" + strconv.Itoa(i) + ".png")
-		mg0 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle0.5/" + strconv.Itoa(i) + ".png")
-		mg0_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle1/" + strconv.Itoa(i) + ".png")
-		mg1 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle1.5/" + strconv.Itoa(i) + ".png")
-		mg1_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle2/" + strconv.Itoa(i) + ".png")
-		mg2 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle2.5/" + strconv.Itoa(i) + ".png")
-		mg2_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle3/" + strconv.Itoa(i) + ".png")
-		mg3 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/idle3.5/" + strconv.Itoa(i) + ".png")
-		mg3_5 := tools.GetEbitenImage(s)
-		imgs_idel0[i] = mg0
-		imgs_idel0_5[i] = mg0_5
-		imgs_idel1[i] = mg1
-		imgs_idel1_5[i] = mg1_5
-		imgs_idel2[i] = mg2
-		imgs_idel2_5[i] = mg2_5
-		imgs_idel3[i] = mg3
-		imgs_idel3_5[i] = mg3_5
+	//load idle images
+	for j := 0; j < 8; j++ {
+		sub_asset_2_idle = make(map[int]*ebiten.Image)
+		for i := 0; i < 4; i++ {
+			s, _ := images.ReadFile("resource/man/warrior/" + strconv.Itoa(j) + "_stand_" + strconv.Itoa(i) + ".png")
+			mg := tools.GetEbitenImage(s)
+			sub_asset_2_idle[i] = mg
+		}
+		sub_asset_1_idle[j] = sub_asset_2_idle
 	}
-	for i := 0; i < 6; i++ {
-		s, _ := images.ReadFile(PATH + "/run0/" + strconv.Itoa(i) + ".png")
-		img0 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run0.5/" + strconv.Itoa(i) + ".png")
-		img0_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run1/" + strconv.Itoa(i) + ".png")
-		img1 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run1.5/" + strconv.Itoa(i) + ".png")
-		img1_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run2/" + strconv.Itoa(i) + ".png")
-		img2 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run2.5/" + strconv.Itoa(i) + ".png")
-		img2_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run3/" + strconv.Itoa(i) + ".png")
-		img3 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/run3.5/" + strconv.Itoa(i) + ".png")
-		img3_5 := tools.GetEbitenImage(s)
-		//
-		s, _ = images.ReadFile(PATH + "/attack0/" + strconv.Itoa(i) + ".png")
-		imgs0 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack0.5/" + strconv.Itoa(i) + ".png")
-		imgs0_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack1/" + strconv.Itoa(i) + ".png")
-		imgs1 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack1.5/" + strconv.Itoa(i) + ".png")
-		imgs1_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack2/" + strconv.Itoa(i) + ".png")
-		imgs2 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack2.5/" + strconv.Itoa(i) + ".png")
-		imgs2_5 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack3/" + strconv.Itoa(i) + ".png")
-		imgs3 := tools.GetEbitenImage(s)
-		s, _ = images.ReadFile(PATH + "/attack3.5/" + strconv.Itoa(i) + ".png")
-		imgs3_5 := tools.GetEbitenImage(s)
-		imgs_run0[i] = img0
-		imgs_run0_5[i] = img0_5
-		imgs_run1[i] = img1
-		imgs_run1_5[i] = img1_5
-		imgs_run2[i] = img2
-		imgs_run2_5[i] = img2_5
-		imgs_run3[i] = img3
-		imgs_run3_5[i] = img3_5
-		//
-		imgs_atc0[i] = imgs0
-		imgs_atc0_5[i] = imgs0_5
-		imgs_atc1[i] = imgs1
-		imgs_atc1_5[i] = imgs1_5
-		imgs_atc2[i] = imgs2
-		imgs_atc2_5[i] = imgs2_5
-		imgs_atc3[i] = imgs3
-		imgs_atc3_5[i] = imgs3_5
+	//idle image to assign
+	asset["idle"] = sub_asset_1_idle
+	for j := 0; j < 8; j++ {
+		sub_asset_2_run = make(map[int]*ebiten.Image)
+		sub_asset_2_attack = make(map[int]*ebiten.Image)
+		for i := 0; i < 6; i++ {
+			s, _ := images.ReadFile("resource/man/warrior/" + strconv.Itoa(j) + "_run_" + strconv.Itoa(i) + ".png")
+			mg := tools.GetEbitenImage(s)
+			sub_asset_2_run[i] = mg
+			//
+			s, _ = images.ReadFile("resource/man/warrior/" + strconv.Itoa(j) + "_attack_" + strconv.Itoa(i) + ".png")
+			mg = tools.GetEbitenImage(s)
+			sub_asset_2_attack[i] = mg
+		}
+		sub_asset_1_run[j] = sub_asset_2_run
+		sub_asset_1_attack[j] = sub_asset_2_attack
 	}
+	//run attack image to assign
+	asset["run"] = sub_asset_1_run
+	asset["attack"] = sub_asset_1_attack
 	//BG
 	s, _ = images.ReadFile("resource/bg/bg1.png")
 	img := tools.GetEbitenImage(s)
@@ -208,9 +138,8 @@ func init() {
 	opUI = &ebiten.DrawImageOptions{}
 	opUI.Filter = ebiten.FilterLinear
 	opUI.GeoM.Translate(583, 380)
-
 	//copy
-	MapCopy(imgs_run0, imgNow)
+	MapCopy(asset["idle"][3], imgNow)
 }
 
 func MapCopy(a, b map[int]*ebiten.Image) {
@@ -236,25 +165,7 @@ func (g *Game) Update() error {
 		if x > 583 && x < 627 && y > 380 && y < 424 {
 			g.player.state = ATTACK
 			flg = false
-			switch g.player.direction {
-			case 0:
-				MapCopy(imgs_atc0, imgNow)
-			case 1:
-				MapCopy(imgs_atc0_5, imgNow)
-			case 2:
-				MapCopy(imgs_atc1, imgNow)
-			case 3:
-				MapCopy(imgs_atc1_5, imgNow)
-			case 4:
-				MapCopy(imgs_atc2, imgNow)
-			case 5:
-				MapCopy(imgs_atc2_5, imgNow)
-			case 6:
-				MapCopy(imgs_atc3, imgNow)
-			case 7:
-				MapCopy(imgs_atc3_5, imgNow)
-			}
-
+			MapCopy(asset["attack"][g.player.direction], imgNow)
 		}
 	}
 	//Calculate direction
@@ -265,28 +176,28 @@ func (g *Game) Update() error {
 		g.player.direction = 6
 		opBg.GeoM.Translate(SPEED, 0)
 		g.player.x -= 2
-		MapCopy(imgs_run3, imgNow)
+		MapCopy(asset["run"][6], imgNow)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) || dir == 2 {
 		g.player.state = RUN
 		g.player.direction = 2
 		opBg.GeoM.Translate(-SPEED, 0)
 		g.player.x += 2
-		MapCopy(imgs_run1, imgNow)
+		MapCopy(asset["run"][2], imgNow)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) || dir == 4 {
 		g.player.state = RUN
 		g.player.direction = 4
 		opBg.GeoM.Translate(0, -SPEED)
 		g.player.y += 2
-		MapCopy(imgs_run2, imgNow)
+		MapCopy(asset["run"][4], imgNow)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) || dir == 0 {
 		g.player.state = RUN
 		g.player.direction = 0
 		opBg.GeoM.Translate(0, SPEED)
 		g.player.y -= 2
-		MapCopy(imgs_run0, imgNow)
+		MapCopy(asset["run"][0], imgNow)
 	}
 	//mouse controll
 	if dir == 1 && flg {
@@ -295,7 +206,7 @@ func (g *Game) Update() error {
 		opBg.GeoM.Translate(-SPEED, SPEED)
 		g.player.y -= 2
 		g.player.x += 2
-		MapCopy(imgs_run0_5, imgNow)
+		MapCopy(asset["run"][1], imgNow)
 		flg = false
 	}
 	if dir == 3 && flg {
@@ -304,7 +215,7 @@ func (g *Game) Update() error {
 		opBg.GeoM.Translate(-SPEED, -SPEED)
 		g.player.y += 2
 		g.player.x += 2
-		MapCopy(imgs_run1_5, imgNow)
+		MapCopy(asset["run"][3], imgNow)
 		flg = false
 	}
 	if dir == 5 && flg {
@@ -313,7 +224,7 @@ func (g *Game) Update() error {
 		opBg.GeoM.Translate(SPEED, -SPEED)
 		g.player.y += 2
 		g.player.x -= 2
-		MapCopy(imgs_run2_5, imgNow)
+		MapCopy(asset["run"][5], imgNow)
 		flg = false
 	}
 	if dir == 7 && flg {
@@ -322,36 +233,13 @@ func (g *Game) Update() error {
 		opBg.GeoM.Translate(SPEED, SPEED)
 		g.player.y -= 2
 		g.player.x -= 2
-		MapCopy(imgs_run3_5, imgNow)
+		MapCopy(asset["run"][7], imgNow)
 		flg = false
 	}
 	//states
 	if g.player.state == IDLE {
 		frameNums = 4
-		if g.player.direction == 0 {
-			MapCopy(imgs_idel0, imgNow)
-		}
-		if g.player.direction == 1 {
-			MapCopy(imgs_idel0_5, imgNow)
-		}
-		if g.player.direction == 2 {
-			MapCopy(imgs_idel1, imgNow)
-		}
-		if g.player.direction == 3 {
-			MapCopy(imgs_idel1_5, imgNow)
-		}
-		if g.player.direction == 4 {
-			MapCopy(imgs_idel2, imgNow)
-		}
-		if g.player.direction == 5 {
-			MapCopy(imgs_idel2_5, imgNow)
-		}
-		if g.player.direction == 6 {
-			MapCopy(imgs_idel3, imgNow)
-		}
-		if g.player.direction == 7 {
-			MapCopy(imgs_idel3_5, imgNow)
-		}
+		MapCopy(asset["idle"][g.player.direction], imgNow)
 
 	} else {
 		frameNums = 6
@@ -369,7 +257,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(bgImage, opBg)
 	//draw UI
 	screen.DrawImage(UI, opUI)
-	//draw images
+	//draw palyer
 	screen.DrawImage(imgNow[counts], op)
 	//draw info
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %d\nplayer position %d,%d\nmouse position %d,%d\ndir %d",
