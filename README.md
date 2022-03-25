@@ -19,9 +19,11 @@
 ## 运行效果如下
    
    web版   体验地址 http://www.zimuge.tk/index.html ※服务器比较垃圾，初次加载需要1分钟左右
+   
   ![web](https://user-images.githubusercontent.com/22612129/160109387-59337014-a499-4ebd-bad1-4cfcf765b94e.png)
 
    pc版  
+   
    ![2](https://user-images.githubusercontent.com/22612129/160109817-0f926cf1-2795-4416-8685-f9d8a3de8cbd.png)
 
 
