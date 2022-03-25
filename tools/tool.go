@@ -1,6 +1,13 @@
 package tools
 
-import "math"
+import (
+	"bytes"
+	"image"
+	"log"
+	"math"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 func CaluteDir(x, y, x_tar, y_tar int64) int {
 	if x < x_tar && float64(y) == math.Abs(float64(y_tar)) {
@@ -29,4 +36,12 @@ func CaluteDir(x, y, x_tar, y_tar int64) int {
 		return 7
 	}
 	return 0
+}
+
+func GetEbitenImage(data []byte) *ebiten.Image {
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return ebiten.NewImageFromImage(img)
 }
