@@ -8,7 +8,7 @@
 2. go run main.go   运行游戏
 ```
 ## 控制说明
-  目前demo 只支持 上 下 左 右 按键移动。
+  1.目前demo 支持 上 下 左 右 按键移动 和 鼠标右键点击移动。
 ## 运行效果如下
 
 ![2](https://user-images.githubusercontent.com/22612129/159607360-9454fd68-c4cb-47cb-9fa8-49c25efbe599.png)
