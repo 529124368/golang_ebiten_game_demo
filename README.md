@@ -1,4 +1,4 @@
-# 通过golang的ebiten引擎做的类传奇小demo  power by ebiten引擎
+# 通过golang的ebiten引擎做的类传奇小demo  powerd by ebiten引擎
 
 ！转载请注明来源
 
