@@ -29,6 +29,11 @@
   pc版  
    
   ![1](https://user-images.githubusercontent.com/22612129/160224182-a6908e4d-fa3e-406d-a276-67c09648d729.png)
+  
+  MacOs
+  
+  <img width="1180" alt="スクリーンショット 2022-03-26 23 13 42" src="https://user-images.githubusercontent.com/22612129/160243441-cd8d3de7-e7fc-46ef-b607-00ee1a62414d.png">
+
 
    
 
