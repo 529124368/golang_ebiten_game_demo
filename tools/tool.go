@@ -38,6 +38,7 @@ func CaluteDir(x, y, x_tar, y_tar int64) int {
 	return 0
 }
 
+//
 func GetEbitenImage(data []byte) *ebiten.Image {
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
