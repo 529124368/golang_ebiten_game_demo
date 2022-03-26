@@ -3,9 +3,9 @@
 ！转载请注明来源
 
 ```
-下载源码
-1. go mod vendor 
-2. go run main.go   运行游戏
+1. 下载源码
+2. go mod vendor 
+3. go run main.go  或   go build
 ```
 ## 控制说明
   1.目前demo 支持 上 下 左 右 按键移动 和 鼠标右键点击移动。
