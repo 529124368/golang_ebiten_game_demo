@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"fmt"
+	"game/role"
 	"game/tools"
 	_ "image/png"
 	"log"
@@ -16,6 +17,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+//config
 const (
 	IDLE          int     = 0
 	RUN           int     = 1
@@ -38,17 +40,8 @@ const (
 //Game
 type Game struct {
 	count  int
-	player *Player
-}
-
-//Player
-type Player struct {
-	x         float64
-	y         float64
-	state     int
-	direction int
-	MouseX    int
-	MouseY    int
+	player *role.Player
+	//monster *role.Monster
 }
 
 var (
@@ -77,16 +70,10 @@ var images embed.FS
 
 //factory
 func NewGame() *Game {
+	r := role.NewPlayer(float64(SCREENWIDTH/2), float64(SCREENHEIGHT/2), IDLE, 0, 0, 0)
 	gameStart := &Game{
-		count: 0,
-		player: &Player{
-			x:         float64(SCREENWIDTH / 2),
-			y:         float64(SCREENHEIGHT / 2),
-			state:     IDLE,
-			direction: 0,
-			MouseX:    0,
-			MouseY:    0,
-		},
+		count:  0,
+		player: r,
 	}
 	return gameStart
 }
@@ -123,6 +110,9 @@ func init() {
 				skill_asset[name] = mg
 			}
 		}
+		go func() {
+			runtime.GC()
+		}()
 		wg.Done()
 	}()
 	go func() {
@@ -147,6 +137,9 @@ func init() {
 				assetWea[name] = mg
 			}
 		}
+		go func() {
+			runtime.GC()
+		}()
 		wg.Done()
 	}()
 
@@ -166,6 +159,9 @@ func init() {
 				assetWea[name] = mg
 			}
 		}
+		go func() {
+			runtime.GC()
+		}()
 		wg.Done()
 	}()
 
@@ -197,6 +193,9 @@ func init() {
 		opUI = &ebiten.DrawImageOptions{}
 		opUI.Filter = ebiten.FilterLinear
 		opUI.GeoM.Translate(583, 380)
+		go func() {
+			runtime.GC()
+		}()
 		wg.Done()
 	}()
 	wg.Wait()
@@ -207,8 +206,8 @@ func init() {
 
 func (g *Game) Update() error {
 	g.count++
-	if g.player.state != ATTACK {
-		g.player.state = IDLE
+	if g.player.State != ATTACK {
+		g.player.State = IDLE
 	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
@@ -221,92 +220,95 @@ func (g *Game) Update() error {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
 		if x > 583 && x < 627 && y > 380 && y < 424 {
-			g.player.state = ATTACK
+			if g.player.State != ATTACK {
+				counts = 0
+			}
+			g.player.State = ATTACK
 			flg = false
-			tools.MapCopy(asset, imgNow, g.player.state, g.player.direction, "man")
-			tools.MapCopy(assetWea, imgWeaNow, g.player.state, g.player.direction, "weapon")
-			tools.MapCopy(skill_asset, imgSkillNow, g.player.state, g.player.direction, "skill")
+			tools.MapCopy(asset, imgNow, g.player.State, g.player.Direction, "man")
+			tools.MapCopy(assetWea, imgWeaNow, g.player.State, g.player.Direction, "weapon")
+			tools.MapCopy(skill_asset, imgSkillNow, g.player.State, g.player.Direction, "skill")
 		}
 	}
 	//Calculate direction
 	dir := tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))
 	//keyboard controll
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || dir == 6 {
-		g.player.state = RUN
-		g.player.direction = 6
+		g.player.State = RUN
+		g.player.Direction = 6
 		opBg.GeoM.Translate(SPEED, 0)
-		g.player.x -= 2
+		g.player.X -= 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) || dir == 2 {
-		g.player.state = RUN
-		g.player.direction = 2
+		g.player.State = RUN
+		g.player.Direction = 2
 		opBg.GeoM.Translate(-SPEED, 0)
-		g.player.x += 2
+		g.player.X += 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) || dir == 4 {
-		g.player.state = RUN
-		g.player.direction = 4
+		g.player.State = RUN
+		g.player.Direction = 4
 		opBg.GeoM.Translate(0, -SPEED)
-		g.player.y += 2
+		g.player.Y += 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) || dir == 0 {
-		g.player.state = RUN
-		g.player.direction = 0
+		g.player.State = RUN
+		g.player.Direction = 0
 		opBg.GeoM.Translate(0, SPEED)
-		g.player.y -= 2
+		g.player.Y -= 2
 	}
 	//mouse controll
 	if dir == 1 && flg {
-		g.player.state = RUN
-		g.player.direction = 1
+		g.player.State = RUN
+		g.player.Direction = 1
 		opBg.GeoM.Translate(-SPEED, SPEED)
-		g.player.y -= 2
-		g.player.x += 2
+		g.player.Y -= 2
+		g.player.X += 2
 		flg = false
 	}
 
 	if dir == 3 && flg {
-		g.player.direction = 3
-		g.player.state = RUN
+		g.player.Direction = 3
+		g.player.State = RUN
 		opBg.GeoM.Translate(-SPEED, -SPEED)
-		g.player.y += 2
-		g.player.x += 2
+		g.player.Y += 2
+		g.player.X += 2
 		flg = false
 	}
 	if dir == 5 && flg {
-		g.player.direction = 5
-		g.player.state = RUN
+		g.player.Direction = 5
+		g.player.State = RUN
 		opBg.GeoM.Translate(SPEED, -SPEED)
-		g.player.y += 2
-		g.player.x -= 2
+		g.player.Y += 2
+		g.player.X -= 2
 		flg = false
 	}
 	if dir == 7 && flg {
-		g.player.direction = 7
-		g.player.state = RUN
+		g.player.Direction = 7
+		g.player.State = RUN
 		opBg.GeoM.Translate(SPEED, SPEED)
-		g.player.y -= 2
-		g.player.x -= 2
+		g.player.Y -= 2
+		g.player.X -= 2
 		flg = false
 	}
 	//states
-	if g.player.state == IDLE {
+	if g.player.State == IDLE {
 		frameNums = 6
 
-	} else if g.player.state == ATTACK {
+	} else if g.player.State == ATTACK {
 		frameNums = 6
 	} else {
 		frameNums = 8
 	}
-	tools.MapCopy(asset, imgNow, g.player.state, g.player.direction, "man")
-	tools.MapCopy(assetWea, imgWeaNow, g.player.state, g.player.direction, "weapon")
+	tools.MapCopy(asset, imgNow, g.player.State, g.player.Direction, "man")
+	tools.MapCopy(assetWea, imgWeaNow, g.player.State, g.player.Direction, "weapon")
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("error:", r)
+			fmt.Println("has error is :", r)
 		}
 	}()
 	//draw bg
@@ -318,12 +320,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//draw wea
 	screen.DrawImage(imgWeaNow[counts], opWea)
 	//draw skill
-	if g.player.state == ATTACK {
+	if g.player.State == ATTACK {
 		screen.DrawImage(imgSkillNow[counts], opSkill)
 	}
 	//draw info
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %d\nplayer position %d,%d\nmouse position %d,%d\ndir %d",
-		int64(ebiten.CurrentFPS()), int64(g.player.x), int64(g.player.y), g.player.MouseX, g.player.MouseY, tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))))
+		int64(ebiten.CurrentFPS()), int64(g.player.X), int64(g.player.Y), g.player.MouseX, g.player.MouseY, tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))))
 	//change frame
 	if g.count > 5 {
 		counts++
