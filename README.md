@@ -16,16 +16,19 @@
   3. 攻击动作追加和UI追加
   4. 游戏分辨率提升＋ 游戏素材二进制打包（为了支持浏览器运行）使用embed
   5. 优化重复代码，提高代码健壮性和可维护性
+  6. 增加武器和技能显示
   
 ## 运行效果如下
    
-   web版   体验地址 http://www.zimuge.tk/index.html ※服务器比较垃圾，初次加载需要1分钟左右
+  web版   体验地址 http://www.zimuge.tk/index.html ※服务器比较垃圾，初次加载需要1分钟左右
    
-  ![web](https://user-images.githubusercontent.com/22612129/160109387-59337014-a499-4ebd-bad1-4cfcf765b94e.png)
+  ![2](https://user-images.githubusercontent.com/22612129/160224243-73f635a5-976d-4098-9e1b-a3940831ae79.png)
 
-   pc版  
+  pc版  
    
-   ![2](https://user-images.githubusercontent.com/22612129/160109817-0f926cf1-2795-4416-8685-f9d8a3de8cbd.png)
+  ![1](https://user-images.githubusercontent.com/22612129/160224182-a6908e4d-fa3e-406d-a276-67c09648d729.png)
+
+   
 
 
 
