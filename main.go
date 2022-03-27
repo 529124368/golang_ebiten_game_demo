@@ -8,8 +8,6 @@ import (
 	_ "image/png"
 	"log"
 	"runtime"
-	"strconv"
-	"sync"
 
 	_ "net/http/pprof"
 
@@ -37,6 +35,8 @@ const (
 	SKILLOFFSETY  int     = 10
 )
 
+var game *Game
+
 //Game
 type Game struct {
 	count  int
@@ -45,23 +45,11 @@ type Game struct {
 }
 
 var (
-	counts      int  = 0
-	frameNums   int  = 4
-	flg         bool = false
-	imgNow      map[int]*ebiten.Image
-	imgWeaNow   map[int]*ebiten.Image
-	imgSkillNow map[int]*ebiten.Image
+	counts    int  = 0
+	frameNums int  = 4
+	flg       bool = false
 )
 var op, opWea, opBg, opUI, opSkill *ebiten.DrawImageOptions
-
-//man
-var asset map[string]*ebiten.Image
-
-//weapon
-var assetWea map[string]*ebiten.Image
-
-//skill
-var skill_asset map[string]*ebiten.Image
 
 var bgImage, UI *ebiten.Image
 
@@ -70,7 +58,7 @@ var images embed.FS
 
 //factory
 func NewGame() *Game {
-	r := role.NewPlayer(float64(SCREENWIDTH/2), float64(SCREENHEIGHT/2), IDLE, 0, 0, 0)
+	r := role.NewPlayer(float64(SCREENWIDTH/2), float64(SCREENHEIGHT/2), IDLE, 0, 0, 0, &images)
 	gameStart := &Game{
 		count:  0,
 		player: r,
@@ -79,92 +67,17 @@ func NewGame() *Game {
 }
 
 func init() {
-	wg := sync.WaitGroup{}
-	wg.Add(4)
-	//get images
-	imgNow = make(map[int]*ebiten.Image, 8)
-	imgWeaNow = make(map[int]*ebiten.Image, 8)
-	imgSkillNow = make(map[int]*ebiten.Image, 6)
-
-	//man
-	asset = make(map[string]*ebiten.Image, 160)
-
-	//weapon
-	assetWea = make(map[string]*ebiten.Image, 160)
-
-	//skill
-	skill_asset = make(map[string]*ebiten.Image, 48)
-
+	//game init
+	game = NewGame()
+	//palyer init
+	go func() {
+		game.player.LoadImages()
+		runtime.GC()
+	}()
 	//UI load
 	s, _ := images.ReadFile("resource/UI/attack.png")
 	mgUI := tools.GetEbitenImage(s)
 	UI = mgUI
-
-	//load skill images
-	go func() {
-		for j := 0; j < 8; j++ {
-			for i := 0; i < 6; i++ {
-				s, _ := images.ReadFile("resource/man/skill/" + strconv.Itoa(j) + "_skill_" + strconv.Itoa(i) + ".png")
-				mg := tools.GetEbitenImage(s)
-				name := strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				skill_asset[name] = mg
-			}
-		}
-		go func() {
-			runtime.GC()
-		}()
-		wg.Done()
-	}()
-	go func() {
-		//load idle images
-		for j := 0; j < 8; j++ {
-			for i := 0; i < 6; i++ {
-				s, _ := images.ReadFile("resource/man/warrior/" + strconv.Itoa(j) + "_stand_" + strconv.Itoa(i) + ".png")
-				mg := tools.GetEbitenImage(s)
-				name := "ms_" + strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				asset[name] = mg
-				s, _ = images.ReadFile("resource/man/weapon/" + strconv.Itoa(j) + "_stand_" + strconv.Itoa(i) + ".png")
-				mg = tools.GetEbitenImage(s)
-				name = "ws_" + strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				assetWea[name] = mg
-				s, _ = images.ReadFile("resource/man/warrior/" + strconv.Itoa(j) + "_attack_" + strconv.Itoa(i) + ".png")
-				mg = tools.GetEbitenImage(s)
-				name = "ma_" + strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				asset[name] = mg
-				s, _ = images.ReadFile("resource/man/weapon/" + strconv.Itoa(j) + "_attack_" + strconv.Itoa(i) + ".png")
-				mg = tools.GetEbitenImage(s)
-				name = "wa_" + strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				assetWea[name] = mg
-			}
-		}
-		go func() {
-			runtime.GC()
-		}()
-		wg.Done()
-	}()
-
-	go func() {
-		for j := 0; j < 8; j++ {
-			for i := 0; i < 8; i++ {
-				//man
-				s, _ := images.ReadFile("resource/man/warrior/" + strconv.Itoa(j) + "_run_" + strconv.Itoa(i) + ".png")
-				mg := tools.GetEbitenImage(s)
-				name := "mr_" + strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				asset[name] = mg
-
-				//weapon
-				s1, _ := images.ReadFile("resource/man/weapon/" + strconv.Itoa(j) + "_run_" + strconv.Itoa(i) + ".png")
-				mg = tools.GetEbitenImage(s1)
-				name = "wr_" + strconv.Itoa(j) + "_" + strconv.Itoa(i)
-				assetWea[name] = mg
-			}
-		}
-		go func() {
-			runtime.GC()
-		}()
-		wg.Done()
-	}()
-
 	go func() {
 		//BG
 		s2, _ := images.ReadFile("resource/bg/bg1.png")
@@ -193,13 +106,6 @@ func init() {
 		opUI = &ebiten.DrawImageOptions{}
 		opUI.Filter = ebiten.FilterLinear
 		opUI.GeoM.Translate(583, 380)
-		go func() {
-			runtime.GC()
-		}()
-		wg.Done()
-	}()
-	wg.Wait()
-	go func() {
 		runtime.GC()
 	}()
 }
@@ -225,42 +131,35 @@ func (g *Game) Update() error {
 			}
 			g.player.State = ATTACK
 			flg = false
-			tools.MapCopy(asset, imgNow, g.player.State, g.player.Direction, "man")
-			tools.MapCopy(assetWea, imgWeaNow, g.player.State, g.player.Direction, "weapon")
-			tools.MapCopy(skill_asset, imgSkillNow, g.player.State, g.player.Direction, "skill")
+			g.player.SetAnimator(0)
 		}
 	}
 	//Calculate direction
 	dir := tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))
 	//keyboard controll
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || dir == 6 {
-		g.player.State = RUN
-		g.player.Direction = 6
+		g.player.SetPlayerState(RUN, 6)
 		opBg.GeoM.Translate(SPEED, 0)
 		g.player.X -= 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) || dir == 2 {
-		g.player.State = RUN
-		g.player.Direction = 2
+		g.player.SetPlayerState(RUN, 2)
 		opBg.GeoM.Translate(-SPEED, 0)
 		g.player.X += 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) || dir == 4 {
-		g.player.State = RUN
-		g.player.Direction = 4
+		g.player.SetPlayerState(RUN, 4)
 		opBg.GeoM.Translate(0, -SPEED)
 		g.player.Y += 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) || dir == 0 {
-		g.player.State = RUN
-		g.player.Direction = 0
+		g.player.SetPlayerState(RUN, 0)
 		opBg.GeoM.Translate(0, SPEED)
 		g.player.Y -= 2
 	}
 	//mouse controll
 	if dir == 1 && flg {
-		g.player.State = RUN
-		g.player.Direction = 1
+		g.player.SetPlayerState(RUN, 1)
 		opBg.GeoM.Translate(-SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X += 2
@@ -268,24 +167,21 @@ func (g *Game) Update() error {
 	}
 
 	if dir == 3 && flg {
-		g.player.Direction = 3
-		g.player.State = RUN
+		g.player.SetPlayerState(RUN, 3)
 		opBg.GeoM.Translate(-SPEED, -SPEED)
 		g.player.Y += 2
 		g.player.X += 2
 		flg = false
 	}
 	if dir == 5 && flg {
-		g.player.Direction = 5
-		g.player.State = RUN
+		g.player.SetPlayerState(RUN, 5)
 		opBg.GeoM.Translate(SPEED, -SPEED)
 		g.player.Y += 2
 		g.player.X -= 2
 		flg = false
 	}
 	if dir == 7 && flg {
-		g.player.Direction = 7
-		g.player.State = RUN
+		g.player.SetPlayerState(RUN, 7)
 		opBg.GeoM.Translate(SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X -= 2
@@ -300,8 +196,7 @@ func (g *Game) Update() error {
 	} else {
 		frameNums = 8
 	}
-	tools.MapCopy(asset, imgNow, g.player.State, g.player.Direction, "man")
-	tools.MapCopy(assetWea, imgWeaNow, g.player.State, g.player.Direction, "weapon")
+	g.player.SetAnimator(1)
 	return nil
 }
 
@@ -316,12 +211,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//draw UI
 	screen.DrawImage(UI, opUI)
 	//draw player
-	screen.DrawImage(imgNow[counts], op)
+	screen.DrawImage(g.player.ImgNow[counts], op)
 	//draw wea
-	screen.DrawImage(imgWeaNow[counts], opWea)
+	screen.DrawImage(g.player.ImgWeaNow[counts], opWea)
 	//draw skill
 	if g.player.State == ATTACK {
-		screen.DrawImage(imgSkillNow[counts], opSkill)
+		screen.DrawImage(g.player.ImgSkillNow[counts], opSkill)
 	}
 	//draw info
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %d\nplayer position %d,%d\nmouse position %d,%d\ndir %d",
@@ -343,7 +238,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func main() {
 	ebiten.SetWindowSize(SCREENWIDTH*2, SCREENHEIGHT*2)
 	ebiten.SetWindowTitle("golang game test")
-	if err := ebiten.RunGame(NewGame()); err != nil {
+	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
 }
