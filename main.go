@@ -8,6 +8,7 @@ import (
 	_ "image/png"
 	"log"
 	"runtime"
+	"strconv"
 
 	_ "net/http/pprof"
 
@@ -31,8 +32,8 @@ const (
 	LAYOUTY       int     = 480
 	WEOFFSETX     int     = 127
 	WEOFFSETY     int     = 14
-	SKILLOFFSETX  int     = 120
-	SKILLOFFSETY  int     = 10
+	SKILLOFFSETX  int     = -80
+	SKILLOFFSETY  int     = -80
 )
 
 var game *Game
@@ -74,10 +75,15 @@ func init() {
 		game.player.LoadImages()
 		runtime.GC()
 	}()
-	//UI load
-	s, _ := images.ReadFile("resource/UI/attack.png")
-	mgUI := tools.GetEbitenImage(s)
-	UI = mgUI
+	//
+	go func() {
+		//UI load
+		s, _ := images.ReadFile("resource/UI/attack.png")
+		mgUI := tools.GetEbitenImage(s)
+		UI = mgUI
+
+	}()
+
 	go func() {
 		//BG
 		s2, _ := images.ReadFile("resource/bg/bg1.png")
@@ -86,21 +92,11 @@ func init() {
 		opBg = &ebiten.DrawImageOptions{}
 		opBg.Filter = ebiten.FilterLinear
 		opBg.GeoM.Translate(-700, -550)
-		//player option
-		op = &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(SCREENWIDTH/2+OFFSETX), float64(SCREENHEIGHT/2+OFFSETY))
-		op.GeoM.Scale(0.7, 0.7)
-		op.Filter = ebiten.FilterLinear
-		//weapon option
-		opWea = &ebiten.DrawImageOptions{}
-		opWea.GeoM.Translate(float64(SCREENWIDTH/2+WEOFFSETX), float64(SCREENHEIGHT/2+WEOFFSETY))
-		opWea.GeoM.Scale(0.7, 0.7)
-		op.Filter = ebiten.FilterLinear
 		//skill option
 		opSkill = &ebiten.DrawImageOptions{}
 		opSkill.GeoM.Translate(float64(SCREENWIDTH/2+SKILLOFFSETX), float64(SCREENHEIGHT/2+SKILLOFFSETY))
 		opSkill.CompositeMode = ebiten.CompositeModeLighter
-		opSkill.GeoM.Scale(0.7, 0.7)
+		opSkill.GeoM.Scale(1.5, 1.5)
 		opSkill.Filter = ebiten.FilterLinear
 		//UI
 		opUI = &ebiten.DrawImageOptions{}
@@ -122,6 +118,8 @@ func (g *Game) Update() error {
 		g.player.MouseY = y
 		flg = true
 	}
+	//Calculate direction
+	dir := tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))
 	//attack
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
@@ -129,59 +127,79 @@ func (g *Game) Update() error {
 			if g.player.State != ATTACK {
 				counts = 0
 			}
-			g.player.State = ATTACK
 			flg = false
-			g.player.SetAnimator(0)
+			if g.player.Direction != dir || g.player.State != ATTACK {
+				g.player.SetPlayerState(ATTACK, dir)
+
+			}
 		}
 	}
-	//Calculate direction
-	dir := tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))
 	//keyboard controll
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) || dir == 6 {
-		g.player.SetPlayerState(RUN, 6)
-		opBg.GeoM.Translate(SPEED, 0)
-		g.player.X -= 2
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyRight) || dir == 2 {
-		g.player.SetPlayerState(RUN, 2)
-		opBg.GeoM.Translate(-SPEED, 0)
-		g.player.X += 2
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyDown) || dir == 4 {
-		g.player.SetPlayerState(RUN, 4)
-		opBg.GeoM.Translate(0, -SPEED)
-		g.player.Y += 2
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyUp) || dir == 0 {
-		g.player.SetPlayerState(RUN, 0)
-		opBg.GeoM.Translate(0, SPEED)
-		g.player.Y -= 2
-	}
+	// if dir == 6 {
+	// 	if g.player.Direction != dir || g.player.State != RUN {
+	// 		g.player.SetPlayerState(RUN, dir)
+	// 		g.player.SetAnimator(1)
+	// 	}
+	// 	opBg.GeoM.Translate(SPEED, 0)
+	// 	g.player.X -= 2
+	// }
+	// if dir == 2 {
+	// 	if g.player.Direction != dir || g.player.State != RUN {
+	// 		g.player.SetPlayerState(RUN, dir)
+	// 		g.player.SetAnimator(1)
+	// 	}
+	// 	opBg.GeoM.Translate(-SPEED, 0)
+	// 	g.player.X += 2
+	// }
+	// if dir == 4 {
+	// 	if g.player.Direction != dir || g.player.State != RUN {
+	// 		g.player.SetPlayerState(RUN, dir)
+	// 		g.player.SetAnimator(1)
+	// 	}
+	// 	opBg.GeoM.Translate(0, -SPEED)
+	// 	g.player.Y += 2
+	// }
+	// if dir == 0 {
+	// 	if g.player.Direction != dir || g.player.State != RUN {
+	// 		g.player.SetPlayerState(RUN, dir)
+	// 		g.player.SetAnimator(1)
+	// 	}
+	// 	opBg.GeoM.Translate(0, SPEED)
+	// 	g.player.Y -= 2
+	// }
 	//mouse controll
 	if dir == 1 && flg {
-		g.player.SetPlayerState(RUN, 1)
+		if g.player.Direction != dir || g.player.State != RUN {
+			g.player.SetPlayerState(RUN, dir)
+		}
 		opBg.GeoM.Translate(-SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X += 2
-		flg = false
 	}
 
 	if dir == 3 && flg {
-		g.player.SetPlayerState(RUN, 3)
+		if g.player.Direction != dir || g.player.State != RUN {
+			g.player.SetPlayerState(RUN, dir)
+
+		}
 		opBg.GeoM.Translate(-SPEED, -SPEED)
 		g.player.Y += 2
 		g.player.X += 2
 		flg = false
 	}
 	if dir == 5 && flg {
-		g.player.SetPlayerState(RUN, 5)
+		if g.player.Direction != dir || g.player.State != RUN {
+			g.player.SetPlayerState(RUN, dir)
+		}
 		opBg.GeoM.Translate(SPEED, -SPEED)
 		g.player.Y += 2
 		g.player.X -= 2
 		flg = false
 	}
 	if dir == 7 && flg {
-		g.player.SetPlayerState(RUN, 7)
+		if g.player.Direction != dir || g.player.State != RUN {
+			g.player.SetPlayerState(RUN, dir)
+		}
 		opBg.GeoM.Translate(SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X -= 2
@@ -190,13 +208,13 @@ func (g *Game) Update() error {
 	//states
 	if g.player.State == IDLE {
 		frameNums = 6
+		g.player.SetPlayerState(IDLE, dir)
 
 	} else if g.player.State == ATTACK {
 		frameNums = 6
 	} else {
 		frameNums = 8
 	}
-	g.player.SetAnimator(1)
 	return nil
 }
 
@@ -210,13 +228,43 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(bgImage, opBg)
 	//draw UI
 	screen.DrawImage(UI, opUI)
+
+	//
+	name := ""
+	nameSkill := ""
+	switch g.player.State {
+	case ATTACK:
+		if counts >= 6 {
+			counts = 0
+		}
+		name = strconv.Itoa(g.player.Direction) + "_attack_" + strconv.Itoa(counts) + ".png"
+		nameSkill = strconv.Itoa(g.player.Direction) + "_skill_" + strconv.Itoa(counts) + ".png"
+	case IDLE:
+		if counts >= 6 {
+			counts = 0
+		}
+		name = strconv.Itoa(g.player.Direction) + "_stand_" + strconv.Itoa(counts) + ".png"
+	default:
+		name = strconv.Itoa(g.player.Direction) + "_run_" + strconv.Itoa(counts) + ".png"
+	}
+	imagess, x, y := g.player.GetAnimator("man", name)
 	//draw player
-	screen.DrawImage(g.player.ImgNow[counts], op)
+	op = &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(SCREENWIDTH/2+OFFSETX+x), float64(SCREENHEIGHT/2+OFFSETY+y))
+	op.GeoM.Scale(0.7, 0.7)
+	op.Filter = ebiten.FilterLinear
+	screen.DrawImage(imagess, op)
 	//draw wea
-	screen.DrawImage(g.player.ImgWeaNow[counts], opWea)
+	imagess, x, y = g.player.GetAnimator("weapon", name)
+	opWea = &ebiten.DrawImageOptions{}
+	opWea.GeoM.Translate(float64(SCREENWIDTH/2+WEOFFSETX+x), float64(SCREENHEIGHT/2+WEOFFSETY+y))
+	opWea.GeoM.Scale(0.7, 0.7)
+	opWea.Filter = ebiten.FilterLinear
+	screen.DrawImage(imagess, opWea)
 	//draw skill
 	if g.player.State == ATTACK {
-		screen.DrawImage(g.player.ImgSkillNow[counts], opSkill)
+		imagey, _, _ := g.player.GetAnimator("skill", nameSkill)
+		screen.DrawImage(imagey, opSkill)
 	}
 	//draw info
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %d\nplayer position %d,%d\nmouse position %d,%d\ndir %d",
