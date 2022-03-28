@@ -3,12 +3,14 @@ package main
 import (
 	"embed"
 	"fmt"
+	"game/maps"
 	"game/role"
 	"game/tools"
 	_ "image/png"
 	"log"
 	"runtime"
 	"strconv"
+	"sync"
 
 	_ "net/http/pprof"
 
@@ -40,6 +42,7 @@ var game *Game
 type Game struct {
 	count  int
 	player *role.Player
+	maps   *maps.MapBase
 	//monster *role.Monster
 }
 
@@ -48,38 +51,48 @@ var (
 	frameNums int  = 4
 	flg       bool = false
 )
-var op, opWea, opBg, opUI, opUI1, opSkill *ebiten.DrawImageOptions
+var op, opWea, opUI, opUI1, opSkill *ebiten.DrawImageOptions
 
-var bgImage, UI, UI1 *ebiten.Image
+var UI, UI1 *ebiten.Image
 
 //go:embed resource
 var images embed.FS
 
 //factory
 func NewGame() *Game {
+	//palayer
 	r := role.NewPlayer(float64(SCREENWIDTH/2), float64(SCREENHEIGHT/2), IDLE, 0, 0, 0, &images)
+	//map
+	m := maps.NewMap(&images)
 	gameStart := &Game{
 		count:  0,
 		player: r,
+		maps:   m,
 	}
 	return gameStart
 }
 
 func init() {
+	w := sync.WaitGroup{}
+	w.Add(5)
 	//game init
 	game = NewGame()
 	//palyer init
 	go func() {
 		game.player.LoadImages()
-		runtime.GC()
+		w.Done()
 	}()
-	//
+	//map init
+	go func() {
+		game.maps.LoadMap()
+		w.Done()
+	}()
 	go func() {
 		//UI load
 		s, _ := images.ReadFile("resource/UI/liehuo.png")
 		mgUI := tools.GetEbitenImage(s)
 		UI = mgUI
-		runtime.GC()
+		w.Done()
 	}()
 
 	go func() {
@@ -87,17 +100,10 @@ func init() {
 		s, _ := images.ReadFile("resource/UI/chisha.png")
 		mgUI := tools.GetEbitenImage(s)
 		UI1 = mgUI
-		runtime.GC()
+		w.Done()
 	}()
 
 	go func() {
-		//BG
-		s2, _ := images.ReadFile("resource/bg/bg1.png")
-		img := tools.GetEbitenImage(s2)
-		bgImage = img
-		opBg = &ebiten.DrawImageOptions{}
-		opBg.Filter = ebiten.FilterLinear
-		opBg.GeoM.Translate(-700, -550)
 		//UI
 		opUI = &ebiten.DrawImageOptions{}
 		opUI.Filter = ebiten.FilterLinear
@@ -105,6 +111,10 @@ func init() {
 		opUI1 = &ebiten.DrawImageOptions{}
 		opUI1.Filter = ebiten.FilterLinear
 		opUI1.GeoM.Translate(620, 330)
+		w.Done()
+	}()
+	w.Wait()
+	go func() {
 		runtime.GC()
 	}()
 }
@@ -188,7 +198,7 @@ func (g *Game) Update() error {
 		if g.player.Direction != dir || g.player.State != RUN {
 			g.player.SetPlayerState(RUN, dir)
 		}
-		opBg.GeoM.Translate(-SPEED, SPEED)
+		g.maps.OpBg.GeoM.Translate(-SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X += 2
 		flg = false
@@ -199,7 +209,7 @@ func (g *Game) Update() error {
 			g.player.SetPlayerState(RUN, dir)
 
 		}
-		opBg.GeoM.Translate(-SPEED, -SPEED)
+		g.maps.OpBg.GeoM.Translate(-SPEED, -SPEED)
 		g.player.Y += 2
 		g.player.X += 2
 		flg = false
@@ -208,7 +218,7 @@ func (g *Game) Update() error {
 		if g.player.Direction != dir || g.player.State != RUN {
 			g.player.SetPlayerState(RUN, dir)
 		}
-		opBg.GeoM.Translate(SPEED, -SPEED)
+		g.maps.OpBg.GeoM.Translate(SPEED, -SPEED)
 		g.player.Y += 2
 		g.player.X -= 2
 		flg = false
@@ -217,7 +227,7 @@ func (g *Game) Update() error {
 		if g.player.Direction != dir || g.player.State != RUN {
 			g.player.SetPlayerState(RUN, dir)
 		}
-		opBg.GeoM.Translate(SPEED, SPEED)
+		g.maps.OpBg.GeoM.Translate(SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X -= 2
 		flg = false
@@ -242,7 +252,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}()
 	//draw bg
-	screen.DrawImage(bgImage, opBg)
+	screen.DrawImage(g.maps.BgImage, g.maps.OpBg)
 	//draw UI
 	screen.DrawImage(UI, opUI)
 	screen.DrawImage(UI1, opUI1)
@@ -290,7 +300,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opSkill.Filter = ebiten.FilterLinear
 		screen.DrawImage(imagey, opSkill)
 	}
-	//draw info
+	//draw debug
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %d\nplayer position %d,%d\nmouse position %d,%d\ndir %d",
 		int64(ebiten.CurrentFPS()), int64(g.player.X), int64(g.player.Y), g.player.MouseX, g.player.MouseY, tools.CaluteDir(PLAYERCENTERX, PLAYERCENTERY, int64(g.player.MouseX), int64(g.player.MouseY))))
 	//change frame

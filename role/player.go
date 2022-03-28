@@ -44,6 +44,7 @@ func NewPlayer(x, y float64, state, dir, mx, my int, images *embed.FS) *Player {
 func (p *Player) LoadImages() {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
+	//player load
 	go func() {
 		plist, _ := p.image.ReadFile("resource/man/warrior/man.png")
 		plist_json, _ := p.image.ReadFile("resource/man/warrior/man.json")
@@ -51,6 +52,7 @@ func (p *Player) LoadImages() {
 		runtime.GC()
 		wg.Done()
 	}()
+	//weapon laod
 	go func() {
 		plist, _ := p.image.ReadFile("resource/man/weapon/tulong.png")
 		plist_json, _ := p.image.ReadFile("resource/man/weapon/tulong.json")
@@ -59,6 +61,7 @@ func (p *Player) LoadImages() {
 		wg.Done()
 
 	}()
+	//skill load
 	go func() {
 		loadedSkill = "liehuo"
 		plist, _ := p.image.ReadFile("resource/man/skill/liehuo.png")
