@@ -175,6 +175,7 @@ func (g *Game) Update() error {
 		opBg.GeoM.Translate(-SPEED, SPEED)
 		g.player.Y -= 2
 		g.player.X += 2
+		flg = false
 	}
 
 	if dir == 3 && flg {
