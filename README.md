@@ -4,7 +4,7 @@
 
 ```
 1. 下载源码
-2. go mod vendor 
+2. go get | go mod vendor 
 3. go run main.go  或   go build
 ```
 ## 控制说明
