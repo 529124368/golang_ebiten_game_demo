@@ -1,4 +1,6 @@
-# 通过golang的ebiten引擎做的类传奇小demo
+![g](https://user-images.githubusercontent.com/22612129/206828835-e3e445d1-380a-40e0-9f4c-f26161fda78b.gif)
+
+# 通过golang的ebiten引擎做的类传奇小demo    
 
 ！转载请注明来源
 
